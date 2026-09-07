@@ -1,6 +1,6 @@
 package interfaz;
 
-// hola pri
+// hola pri, segunda prueba.
 public class Main {
 		
 	    public static void main(String[] args) {
