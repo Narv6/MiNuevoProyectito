@@ -1,4 +1,4 @@
-package mundo;
+package interfaz;
 
 // hola pri
 public class Main {
