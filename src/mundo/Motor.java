@@ -12,9 +12,7 @@ public abstract class Motor {
     {
 
         if (potencia <= 0) {
-            throw new IllegalArgumentException(
-                    "La potencia debe ser mayor que 0."
-            );
+            throw new IllegalArgumentException("La potencia debe ser mayor que 0.");
         }
 
         this.potencia = potencia;
@@ -37,9 +35,7 @@ public abstract class Motor {
     {
 
         if (potencia <= 0) {
-            throw new IllegalArgumentException(
-                    "La potencia debe ser mayor que 0."
-            );
+            throw new IllegalArgumentException("La potencia debe ser mayor que 0.");
         }
 
         this.potencia = potencia;
