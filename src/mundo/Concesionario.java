@@ -1,125 +1,136 @@
 package mundo;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Stack;
 
-import excepciones.VehiculoNoEncontradoException;
-
+/**
+ * Clase que administra el concesionario, su inventario con lista doble,
+ * la cola de taller y la pila de ventas.
+ */
 public class Concesionario {
 
-    // ATRIBUTOS
+    // 1. Inventario manejado mediante Lista Doblemente Enlazada
+    private ListaDobleVehiculos inventarioDoble;
 
-    private String nombre;
-    private ArrayList<Vehiculo> vehiculos;
+    // 2. Cola para los vehículos en espera de mantenimiento (FIFO)
+    private Queue<Vehiculo> colaTaller;
 
-    // CONSTRUCTOR
+    // 3. Pila para el historial de ventas recientes (LIFO)
+    private Stack<Vehiculo> pilaVentas;
 
-    public Concesionario(String nombre) 
-    {
+    /**
+     * Constructor del concesionario.
+     */
+    public Concesionario() {
+        this.inventarioDoble = new ListaDobleVehiculos();
+        this.colaTaller = new LinkedList<>();
+        this.pilaVentas = new Stack<>();
+    }
 
-        if (nombre == null || nombre.trim().isEmpty()) 
-        {
-            throw new IllegalArgumentException("El nombre del concesionario no puede estar vacío.");
+    public void agregarVehiculoInventario(Vehiculo vehiculo) {
+        inventarioDoble.agregarAlFinal(vehiculo);
+    }
+
+    public ListaDobleVehiculos getInventarioDoble() {
+        return inventarioDoble;
+    }
+    //Colas
+    
+    public void registrarVehiculoEnTaller(Vehiculo vehiculo) {
+        colaTaller.offer(vehiculo); // Encola el vehículo (FIFO)
+    }
+
+    public Vehiculo atenderSiguienteVehiculoTaller() {
+        if (colaTaller.isEmpty()) {
+            return null;
+        }
+        return colaTaller.poll(); // Retira el primero que llegó
+    }
+
+    
+    //Pilas 
+    public void registrarVenta(Vehiculo vehiculo) {
+        pilaVentas.push(vehiculo); // Apila la venta (LIFO)
+    }
+
+    public Vehiculo cancelarUltimaVenta() {
+        if (pilaVentas.isEmpty()) {
+            return null;
+        }
+        return pilaVentas.pop(); // Saca el último registrado
+    }
+
+    // ORDENAMIENTO POR BURBUJA
+    
+    public void ordenarInventarioPorPrecioBurbuja() {
+        int n = inventarioDoble.getTamanio();
+        if (n <= 1) {
+            return; // Si está vacía o tiene un solo elemento, ya está ordenada
         }
 
-        this.nombre = nombre;
-        this.vehiculos = new ArrayList<>();
-    }
+        boolean intercambiado;
+        
+        for (int i = 0; i < n - 1; i++) {
+            intercambiado = false;
+            NodoDobleVehiculo actual = inventarioDoble.getCabeza();
+            
+            // Recorremos la lista intercambiando datos si es necesario
+            for (int j = 0; j < n - i - 1; j++) {
+                if (actual != null && actual.getSiguiente() != null) {
+                    Vehiculo v1 = actual.getDato();
+                    Vehiculo v2 = actual.getSiguiente().getDato();
 
-    // GETTERS Y SETTERS
-
-    public String getNombre() 
-    {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) 
-    {
-
-        if (nombre == null || nombre.trim().isEmpty()) 
-        {
-            throw new IllegalArgumentException("El nombre del concesionario no puede estar vacío.");
-        }
-
-        this.nombre = nombre;
-    }
-
-    public ArrayList<Vehiculo> getVehiculos() 
-    {
-        return vehiculos;
-    }
-
-    // MÉTODOS
-
-    public void agregarVehiculo(Vehiculo vehiculo) 
-    {
-
-        if (vehiculo == null) 
-        {
-            throw new IllegalArgumentException("No se puede agregar un vehículo nulo.");
-        }
-
-        vehiculos.add(vehiculo);
-    }
-
-    public void eliminarVehiculo(Vehiculo vehiculo)
-            throws VehiculoNoEncontradoException 
-    {
-
-        if (!vehiculos.remove(vehiculo)) 
-        {
-
-            throw new VehiculoNoEncontradoException("El vehículo no se encuentra en el concesionario.");
+                    if (v1.getPrecio() > v2.getPrecio()) {
+                        // Intercambiamos los datos de los nodos
+                        actual.setDato(v2);
+                        actual.getSiguiente().setDato(v1);
+                        intercambiado = true;
+                    }
+                }
+                if (actual != null) {
+                    actual = actual.getSiguiente();
+                }
+            }
+            
+            // Optimización: si no hubo intercambios, la lista ya está ordenada
+            if (!intercambiado) {
+                break;
+            }
         }
     }
 
-    public Vehiculo buscarPorMarca(String marca)
-            throws VehiculoNoEncontradoException {
+    // BÚSQUEDA BINARIA
+    
+    public Vehiculo buscarVehiculoBinarioPorPrecio(double precioBuscado) {
+        //Primero convertimos temporalmente los nodos a un ArrayList para aplicar índices de búsqueda binaria
+        ArrayList<Vehiculo> listaTemporal = new ArrayList<>();
+        NodoDobleVehiculo actual = inventarioDoble.getCabeza();
+        
+        while (actual != null) {
+            listaTemporal.add(actual.getDato());
+            actual = actual.getSiguiente();
+        }
 
-        for (Vehiculo vehiculo : vehiculos) 
-        {
+        int inicio = 0;
+        int fin = listaTemporal.size() - 1;
 
-            if (vehiculo.getMarca().equalsIgnoreCase(marca)) 
-            {
-                return vehiculo;
+        while (inicio <= fin) {
+            int medio = inicio + (fin - inicio) / 2;
+            Vehiculo vehiculoMedio = listaTemporal.get(medio);
+
+            if (vehiculoMedio.getPrecio() == precioBuscado) {
+                return vehiculoMedio; // ¡Encontrado!
+            }
+
+            if (vehiculoMedio.getPrecio() < precioBuscado) {
+                inicio = medio + 1; // Descartar mitad izquierda
+            } else {
+                fin = medio - 1;    // Descartar mitad derecha
             }
         }
 
-        throw new VehiculoNoEncontradoException("No se encontró un vehículo de la marca: " + marca);
-    }
-
-    public double calcularValorTotal() 
-    {
-
-        double total = 0;
-
-        for (Vehiculo vehiculo : vehiculos) 
-        {
-            total += vehiculo.getPrecio();
-        }
-
-        return total;
-    }
-
-    public int obtenerCantidadVehiculos() 
-    {
-        return vehiculos.size();
-    }
-
-    public void mostrarVehiculos() 
-    {
-
-        for (Vehiculo vehiculo : vehiculos) 
-        {
-        	System.out.println(vehiculo);
-        }
-    }
-
-    // TO STRING
-
-    @Override
-    public String toString() {
-
-        return "Concesionario [nombre=" + nombre
-                + ", cantidadVehiculos=" + vehiculos.size() + "]";
+        return null; // No encontrado
     }
 }
