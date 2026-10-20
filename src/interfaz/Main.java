@@ -22,8 +22,8 @@ public class Main {
         concesionario.agregarVehiculoInventario(v2);
 
         // Ordenamiento y búsqueda
-        concesionario.ordenarInventarioPorPrecioBurbuja();
-        Vehiculo encontrado = concesionario.buscarVehiculoBinarioPorPrecio(45000.0);
+        concesionario.ordenarInventarioPorPrecio();
+        Vehiculo encontrado = concesionario.buscarVehiculoPorPrecio(45000.0);
         System.out.println("Vehículo encontrado: " + (encontrado != null ? encontrado.getModelo() : "Ninguno"));
 
         // Operaciones de taller (FIFO) y ventas (LIFO)

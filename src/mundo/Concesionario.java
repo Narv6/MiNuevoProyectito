@@ -64,7 +64,7 @@ public class Concesionario {
 
     // ORDENAMIENTO POR BURBUJA
     
-    public void ordenarInventarioPorPrecioBurbuja() {
+    public void ordenarInventarioPorPrecio() {
         int n = inventarioDoble.getTamanio();
         if (n <= 1) {
             return; // Si está vacía o tiene un solo elemento, ya está ordenada
@@ -103,7 +103,7 @@ public class Concesionario {
 
     // BÚSQUEDA BINARIA
     
-    public Vehiculo buscarVehiculoBinarioPorPrecio(double precioBuscado) {
+    public Vehiculo buscarVehiculoPorPrecio(double precioBuscado) {
         //Primero convertimos temporalmente los nodos a un ArrayList para aplicar índices de búsqueda binaria
         ArrayList<Vehiculo> listaTemporal = new ArrayList<>();
         NodoDobleVehiculo actual = inventarioDoble.getCabeza();

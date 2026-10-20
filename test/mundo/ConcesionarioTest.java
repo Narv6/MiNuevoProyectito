@@ -31,7 +31,7 @@ public class ConcesionarioTest {
         concesionario.agregarVehiculoInventario(v2); // 12000
 
         // Ejecutamos el ordenamiento por burbuja
-        concesionario.ordenarInventarioPorPrecioBurbuja();
+        concesionario.ordenarInventarioPorPrecio();
 
         // Verificamos el nuevo orden en la lista doble (de menor a mayor precio)
         NodoDobleVehiculo cabeza = concesionario.getInventarioDoble().getCabeza();
@@ -47,15 +47,15 @@ public class ConcesionarioTest {
         concesionario.agregarVehiculoInventario(v2); // 12000
         concesionario.agregarVehiculoInventario(v1); // 45000
         concesionario.agregarVehiculoInventario(v3); // 85000
-        concesionario.ordenarInventarioPorPrecioBurbuja();
+        concesionario.ordenarInventarioPorPrecio();
 
         // Buscamos un precio existente
-        Vehiculo encontrado = concesionario.buscarVehiculoBinarioPorPrecio(45000.0);
+        Vehiculo encontrado = concesionario.buscarVehiculoPorPrecio(45000.0);
         assertNotNull(encontrado);
         assertEquals("Mazda 3", encontrado.getModelo());
 
         // Buscamos un precio que no existe
-        Vehiculo noEncontrado = concesionario.buscarVehiculoBinarioPorPrecio(99999.0);
+        Vehiculo noEncontrado = concesionario.buscarVehiculoPorPrecio(99999.0);
         assertNull(noEncontrado);
     }
 
