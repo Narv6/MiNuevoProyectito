@@ -1,95 +1,208 @@
+
 package mundo;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/**
- * Pruebas unitarias para validar la lógica del Concesionario, 
- * estructuras de datos y algoritmos.
- */
-public class ConcesionarioTest {
+import excepciones.DatosVehiculoInvalidosException;
+import excepciones.PrecioInvalidoException;
 
+/**
+ * Pruebas del inventario, la cola de taller y la pila de ventas.
+ */
+public class ConcesionarioTest
+{
     private Concesionario concesionario;
     private Vehiculo v1;
     private Vehiculo v2;
     private Vehiculo v3;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception
+    {
         concesionario = new Concesionario();
+
         v1 = new Carro("Mazda", "Mazda 3", 45000.0, 4);
         v2 = new Moto("Yamaha", "MT-07", 12000.0, 700, "Urbano");
         v3 = new Camion("Chevrolet", "NPR", 85000.0, 5000.0, 2);
     }
 
-    @Test
-    public void testOrdenamientoBurbuja() {
-        // Agregamos en orden desordenado
-        concesionario.agregarVehiculoInventario(v3); // 85000
-        concesionario.agregarVehiculoInventario(v1); // 45000
-        concesionario.agregarVehiculoInventario(v2); // 12000
+    // ORDENAMIENTO POR BURBUJA
 
-        // Ejecutamos el ordenamiento por burbuja
+    @Test
+    public void testOrdenamientoBurbuja() throws Exception
+    {
+        concesionario.agregarVehiculoInventario(v3);
+        concesionario.agregarVehiculoInventario(v1);
+        concesionario.agregarVehiculoInventario(v2);
+
         concesionario.ordenarInventarioPorPrecio();
 
-        // Verificamos el nuevo orden en la lista doble (de menor a mayor precio)
         NodoDobleVehiculo cabeza = concesionario.getInventarioDoble().getCabeza();
-        
+
         assertEquals(12000.0, cabeza.getDato().getPrecio(), 0.01);
         assertEquals(45000.0, cabeza.getSiguiente().getDato().getPrecio(), 0.01);
         assertEquals(85000.0, cabeza.getSiguiente().getSiguiente().getDato().getPrecio(), 0.01);
     }
 
     @Test
-    public void testBusquedaBinaria() {
-        // Agregamos y ordenamos primero
-        concesionario.agregarVehiculoInventario(v2); // 12000
-        concesionario.agregarVehiculoInventario(v1); // 45000
-        concesionario.agregarVehiculoInventario(v3); // 85000
+    public void testOrdenarInventarioVacio()
+    {
         concesionario.ordenarInventarioPorPrecio();
 
-        // Buscamos un precio existente
+        assertEquals(0, concesionario.getInventarioDoble().getTamanio());
+    }
+
+    @Test
+    public void testOrdenarUnSoloVehiculo() throws Exception
+    {
+        concesionario.agregarVehiculoInventario(v1);
+
+        concesionario.ordenarInventarioPorPrecio();
+
+        assertEquals(v1, concesionario.getInventarioDoble().getCabeza().getDato());
+    }
+
+    // BUSQUEDA BINARIA
+
+    @Test
+    public void testBusquedaBinaria() throws Exception
+    {
+        concesionario.agregarVehiculoInventario(v3);
+        concesionario.agregarVehiculoInventario(v2);
+        concesionario.agregarVehiculoInventario(v1);
+
         Vehiculo encontrado = concesionario.buscarVehiculoPorPrecio(45000.0);
+
         assertNotNull(encontrado);
         assertEquals("Mazda 3", encontrado.getModelo());
 
-        // Buscamos un precio que no existe
         Vehiculo noEncontrado = concesionario.buscarVehiculoPorPrecio(99999.0);
+
         assertNull(noEncontrado);
     }
 
     @Test
-    public void testColaTallerFIFO() {
-        concesionario.registrarVehiculoEnTaller(v1); // Primero en llegar
-        concesionario.registrarVehiculoEnTaller(v2); // Segundo en llegar
+    public void testBusquedaInventarioVacio()
+    {
+        Vehiculo encontrado = concesionario.buscarVehiculoPorPrecio(45000.0);
 
-        // El primero en ser atendido debe ser v1 (FIFO)
+        assertNull(encontrado);
+    }
+
+    // COLA DE TALLER FIFO
+
+    @Test
+    public void testColaTallerFIFO() throws Exception
+    {
+        concesionario.agregarVehiculoInventario(v1);
+        concesionario.agregarVehiculoInventario(v2);
+
+        concesionario.registrarVehiculoEnTaller(v1);
+        concesionario.registrarVehiculoEnTaller(v2);
+
         Vehiculo atendido1 = concesionario.atenderSiguienteVehiculoTaller();
+
         assertEquals(v1, atendido1);
 
-        // El siguiente debe ser v2
         Vehiculo atendido2 = concesionario.atenderSiguienteVehiculoTaller();
+
         assertEquals(v2, atendido2);
 
-        // Si la cola está vacía debe retornar null
         assertNull(concesionario.atenderSiguienteVehiculoTaller());
     }
 
     @Test
-    public void testPilaVentasLIFO() {
-        concesionario.registrarVenta(v1); // Primera venta
-        concesionario.registrarVenta(v2); // Última venta
+    public void testTallerVacio()
+    {
+        assertNull(concesionario.atenderSiguienteVehiculoTaller());
+    }
 
-        // Al cancelar/revertir, la última venta registrada (v2) debe salir primero (LIFO)
+    // PILA DE VENTAS LIFO
+
+    @Test
+    public void testPilaVentasLIFO() throws Exception
+    {
+        concesionario.agregarVehiculoInventario(v1);
+        concesionario.agregarVehiculoInventario(v2);
+
+        concesionario.registrarVenta(v1);
+        concesionario.registrarVenta(v2);
+
+        assertEquals(0, concesionario.getInventarioDoble().getTamanio());
+
         Vehiculo cancelada1 = concesionario.cancelarUltimaVenta();
+
         assertEquals(v2, cancelada1);
 
-        // Luego debe salir v1
         Vehiculo cancelada2 = concesionario.cancelarUltimaVenta();
+
         assertEquals(v1, cancelada2);
 
-        // Si la pila está vacía debe retornar null
+        assertEquals(2, concesionario.getInventarioDoble().getTamanio());
+
         assertNull(concesionario.cancelarUltimaVenta());
+    }
+
+    @Test
+    public void testPilaVentasVacia()
+    {
+        assertNull(concesionario.cancelarUltimaVenta());
+    }
+
+    // FILTROS POR TIPO
+
+    @Test
+    public void testFiltrosPorTipo() throws Exception
+    {
+        concesionario.agregarVehiculoInventario(v1);
+        concesionario.agregarVehiculoInventario(v2);
+        concesionario.agregarVehiculoInventario(v3);
+
+        concesionario.agregarVehiculoInventario(
+                new Bicicleta("Trek", "Marlin", 900.0, 18));
+
+        assertEquals(1, concesionario.obtenerCarros().size());
+        assertEquals(1, concesionario.obtenerMotos().size());
+        assertEquals(1, concesionario.obtenerCamiones().size());
+        assertEquals(1, concesionario.obtenerBicicletas().size());
+    }
+
+    // EXCEPCIONES PERSONALIZADAS
+
+    @Test
+    public void testPrecioInvalido() throws Exception
+    {
+        boolean lanzoExcepcion = false;
+
+        try
+        {
+            new Carro("Mazda", "3", -50, 4);
+        }
+        catch (PrecioInvalidoException e)
+        {
+            lanzoExcepcion = true;
+        }
+
+        assertEquals(true, lanzoExcepcion);
+    }
+
+    @Test
+    public void testPuertasInvalidas() throws Exception
+    {
+        boolean lanzoExcepcion = false;
+
+        try
+        {
+            new Carro("Mazda", "3", 50000, 0);
+        }
+        catch (DatosVehiculoInvalidosException e)
+        {
+            lanzoExcepcion = true;
+        }
+
+        assertEquals(true, lanzoExcepcion);
     }
 }
