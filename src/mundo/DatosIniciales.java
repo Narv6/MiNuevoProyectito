@@ -20,6 +20,11 @@ public class DatosIniciales
         Vehiculo v2 = new Moto("Yamaha", "MT-07", 12000.0, 700, "Urbano");
         Vehiculo v3 = new Camion("Chevrolet", "NPR", 85000.0, 5000.0, 2);
 
+        
+        v1.setRutaImagen("imagenes/mazda.png");
+        v2.setRutaImagen("imagenes/yamaha.jpg");
+        v3.setRutaImagen("imagenes/chevrolet.jpg");
+
         concesionario.agregarVehiculoInventario(v3);
         concesionario.agregarVehiculoInventario(v1);
         concesionario.agregarVehiculoInventario(v2);
