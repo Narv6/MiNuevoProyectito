@@ -6,11 +6,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+
 import excepciones.DatosVehiculoInvalidosException;
 import excepciones.PrecioInvalidoException;
 
 /**
- * Pruebas del inventario, la cola de taller y la pila de ventas.
+ * Pruebas del inventario, la cola del taller, las ventas y los motores.
  */
 public class ConcesionarioTest
 {
@@ -23,7 +25,6 @@ public class ConcesionarioTest
     public void setUp() throws Exception
     {
         concesionario = new Concesionario();
-
         v1 = new Carro("Mazda", "Mazda 3", 45000.0, 4);
         v2 = new Moto("Yamaha", "MT-07", 12000.0, 700, "Urbano");
         v3 = new Camion("Chevrolet", "NPR", 85000.0, 5000.0, 2);
@@ -51,7 +52,6 @@ public class ConcesionarioTest
     public void testOrdenarInventarioVacio()
     {
         concesionario.ordenarInventarioPorPrecio();
-
         assertEquals(0, concesionario.getInventarioDoble().getTamanio());
     }
 
@@ -59,13 +59,11 @@ public class ConcesionarioTest
     public void testOrdenarUnSoloVehiculo() throws Exception
     {
         concesionario.agregarVehiculoInventario(v1);
-
         concesionario.ordenarInventarioPorPrecio();
-
         assertEquals(v1, concesionario.getInventarioDoble().getCabeza().getDato());
     }
 
-    // BUSQUEDA BINARIA
+    // BUSQUEDA BINARIA MULTIPLE
 
     @Test
     public void testBusquedaBinaria() throws Exception
@@ -74,25 +72,36 @@ public class ConcesionarioTest
         concesionario.agregarVehiculoInventario(v2);
         concesionario.agregarVehiculoInventario(v1);
 
-        Vehiculo encontrado = concesionario.buscarVehiculoPorPrecio(45000.0);
+        ArrayList<Vehiculo> encontrados = concesionario.buscarVehiculoPorPrecio(45000.0);
+        assertEquals(1, encontrados.size());
+        assertEquals("Mazda 3", encontrados.get(0).getModelo());
 
-        assertNotNull(encontrado);
-        assertEquals("Mazda 3", encontrado.getModelo());
-
-        Vehiculo noEncontrado = concesionario.buscarVehiculoPorPrecio(99999.0);
-
-        assertNull(noEncontrado);
+        ArrayList<Vehiculo> noEncontrados = concesionario.buscarVehiculoPorPrecio(99999.0);
+        assertEquals(0, noEncontrados.size());
     }
 
     @Test
     public void testBusquedaInventarioVacio()
     {
-        Vehiculo encontrado = concesionario.buscarVehiculoPorPrecio(45000.0);
-
-        assertNull(encontrado);
+        ArrayList<Vehiculo> encontrados = concesionario.buscarVehiculoPorPrecio(45000.0);
+        assertEquals(0, encontrados.size());
     }
 
-    // COLA DE TALLER FIFO
+    @Test
+    public void testBuscarVariosVehiculosConMismoPrecio() throws Exception
+    {
+        Vehiculo carro1 = new Carro("Mazda", "Mazda 3", 45000.0, 4);
+        Vehiculo carro2 = new Carro("Toyota", "Corolla", 45000.0, 4);
+        Vehiculo moto = new Moto("Yamaha", "MT-07", 12000.0, 700, "Urbano");
+
+        concesionario.agregarVehiculoInventario(carro1);
+        concesionario.agregarVehiculoInventario(carro2);
+        concesionario.agregarVehiculoInventario(moto);
+
+        assertEquals(2, concesionario.buscarVehiculoPorPrecio(45000.0).size());
+    }
+
+    // COLA FIFO
 
     @Test
     public void testColaTallerFIFO() throws Exception
@@ -103,14 +112,8 @@ public class ConcesionarioTest
         concesionario.registrarVehiculoEnTaller(v1);
         concesionario.registrarVehiculoEnTaller(v2);
 
-        Vehiculo atendido1 = concesionario.atenderSiguienteVehiculoTaller();
-
-        assertEquals(v1, atendido1);
-
-        Vehiculo atendido2 = concesionario.atenderSiguienteVehiculoTaller();
-
-        assertEquals(v2, atendido2);
-
+        assertEquals(v1, concesionario.atenderSiguienteVehiculoTaller());
+        assertEquals(v2, concesionario.atenderSiguienteVehiculoTaller());
         assertNull(concesionario.atenderSiguienteVehiculoTaller());
     }
 
@@ -120,7 +123,7 @@ public class ConcesionarioTest
         assertNull(concesionario.atenderSiguienteVehiculoTaller());
     }
 
-    // PILA DE VENTAS LIFO
+    // PILA LIFO
 
     @Test
     public void testPilaVentasLIFO() throws Exception
@@ -132,17 +135,9 @@ public class ConcesionarioTest
         concesionario.registrarVenta(v2);
 
         assertEquals(0, concesionario.getInventarioDoble().getTamanio());
-
-        Vehiculo cancelada1 = concesionario.cancelarUltimaVenta();
-
-        assertEquals(v2, cancelada1);
-
-        Vehiculo cancelada2 = concesionario.cancelarUltimaVenta();
-
-        assertEquals(v1, cancelada2);
-
+        assertEquals(v2, concesionario.cancelarUltimaVenta());
+        assertEquals(v1, concesionario.cancelarUltimaVenta());
         assertEquals(2, concesionario.getInventarioDoble().getTamanio());
-
         assertNull(concesionario.cancelarUltimaVenta());
     }
 
@@ -160,9 +155,7 @@ public class ConcesionarioTest
         concesionario.agregarVehiculoInventario(v1);
         concesionario.agregarVehiculoInventario(v2);
         concesionario.agregarVehiculoInventario(v3);
-
-        concesionario.agregarVehiculoInventario(
-                new Bicicleta("Trek", "Marlin", 900.0, 18));
+        concesionario.agregarVehiculoInventario(new Bicicleta("Trek", "Marlin", 900.0, 18));
 
         assertEquals(1, concesionario.obtenerCarros().size());
         assertEquals(1, concesionario.obtenerMotos().size());
@@ -204,5 +197,35 @@ public class ConcesionarioTest
         }
 
         assertEquals(true, lanzoExcepcion);
+    }
+
+    // MOTOR ELECTRICO
+
+    @Test
+    public void testAutonomiaMotorElectrico()
+    {
+        MotorElectrico motor = new MotorElectrico(150, 60);
+        motor.setConsumoCada100Km(15);
+        assertEquals(400.0, motor.calcularAutonomia(), 0.01);
+    }
+
+    // MANTENIMIENTO
+
+    @Test
+    public void testMantenimientoVehiculo() throws Exception
+    {
+        Vehiculo carro = new Carro("Mazda", "Mazda 3", 45000, 4);
+
+        concesionario.agregarVehiculoInventario(carro);
+        concesionario.registrarVehiculoEnTaller(carro);
+
+        carro.setCostoManoObra(100);
+        carro.setCostoRepuestos(80);
+
+        Vehiculo atendido = concesionario.atenderSiguienteVehiculoTaller();
+
+        assertEquals(carro, atendido);
+        assertTrue(carro.isMantenimientoRealizado());
+        assertEquals(180.0, carro.calcularCostoMantenimiento(), 0.01);
     }
 }
