@@ -1,71 +1,97 @@
+
 package mundo;
 
+import interfaz.Electrico;
 
-public class MotorElectrico extends Motor 
+/**
+ * Motor electrico con calculo de autonomia estimada.
+ */
+public class MotorElectrico extends Motor implements Electrico
 {
-
-    // ATRIBUTO
+    // ATRIBUTOS
 
     private double capacidadBateria;
+    private double consumoCada100Km;
 
     // CONSTRUCTOR
 
-    public MotorElectrico(int potencia, double capacidadBateria) 
+    public MotorElectrico(int potencia, double capacidadBateria)
     {
-
         super(potencia);
 
-        if (capacidadBateria <= 0) 
+        if (capacidadBateria <= 0)
         {
-            throw new IllegalArgumentException("La capacidad de la batería debe ser mayor que 0.");
+            throw new IllegalArgumentException("La capacidad de la bateria debe ser mayor que 0.");
         }
 
         this.capacidadBateria = capacidadBateria;
+        this.consumoCada100Km = 0;
     }
 
-    // MÉTODO ABSTRACTO
+    // TIPO DE MOTOR
 
     @Override
-    public String obtenerTipoMotor() 
+    public String obtenerTipoMotor()
     {
-        return "Motor eléctrico";
+        return "Motor electrico";
     }
 
-    // GETTER
+    // GETTERS AND SETTERS
 
-    public double getCapacidadBateria() 
-    
+    public double getCapacidadBateria()
     {
         return capacidadBateria;
     }
 
-    // SETTER
-
-    public void setCapacidadBateria(double capacidadBateria) 
+    public void setCapacidadBateria(double capacidadBateria)
     {
-
-        if (capacidadBateria <= 0) 
+        if (capacidadBateria <= 0)
         {
-            throw new IllegalArgumentException("La capacidad de la batería debe ser mayor que 0.");
+            throw new IllegalArgumentException("La capacidad de la bateria debe ser mayor que 0.");
         }
 
         this.capacidadBateria = capacidadBateria;
     }
 
-    // MÉTODO
-
-    public void cargarBateria() 
+    public double getConsumoCada100Km()
     {
-
-        System.out.println("La batería se está cargando...");
+        return consumoCada100Km;
     }
 
-    // TO STRING
+    public void setConsumoCada100Km(double consumoCada100Km)
+    {
+        if (consumoCada100Km <= 0)
+        {
+            throw new IllegalArgumentException("El consumo debe ser mayor que cero.");
+        }
+
+        this.consumoCada100Km = consumoCada100Km;
+    }
+
+    // INTERFAZ ELECTRICO
 
     @Override
-    public String toString() {
+    public void cargarBateria()
+    {
+        System.out.println("La bateria se esta cargando...");
+    }
 
-        return super.toString()
-                + ", capacidadBateria=" + capacidadBateria + " kWh";
+    @Override
+    public double calcularAutonomia()
+    {
+        if (consumoCada100Km <= 0)
+        {
+            return 0;
+        }
+
+        return (capacidadBateria * 100) / consumoCada100Km;
+    }
+
+    // METODO TO STRING
+
+    @Override
+    public String toString()
+    {
+        return super.toString() + ", capacidadBateria=" + capacidadBateria + " kWh";
     }
 }

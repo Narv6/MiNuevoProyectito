@@ -10,20 +10,14 @@ import excepciones.DatosVehiculoInvalidosException;
 import excepciones.VehiculoNoEncontradoException;
 
 /**
- * Administra el inventario, la cola de taller y la pila de ventas.
+ * Administra inventario, taller y ventas del concesionario.
  */
 public class Concesionario
 {
-    // INVENTARIO CON LISTA DOBLEMENTE ENLAZADA
+    // ATRIBUTOS
 
     private ListaDobleVehiculos inventarioDoble;
-
-    // COLA DE TALLER (FIFO)
-
     private Queue<Vehiculo> colaTaller;
-
-    // PILA DE VENTAS (LIFO)
-
     private Stack<Vehiculo> pilaVentas;
 
     // CONSTRUCTOR
@@ -52,8 +46,6 @@ public class Concesionario
         return inventarioDoble;
     }
 
-    // BUSCAR VEHICULO POR POSICION
-
     public Vehiculo obtenerVehiculoPorPosicion(int posicion) throws VehiculoNoEncontradoException
     {
         NodoDobleVehiculo actual = inventarioDoble.getCabeza();
@@ -73,7 +65,24 @@ public class Concesionario
         throw new VehiculoNoEncontradoException("No existe un vehiculo en esa posicion.");
     }
 
-    // COLA DE TALLER
+    private boolean contieneEnInventario(Vehiculo vehiculo)
+    {
+        NodoDobleVehiculo actual = inventarioDoble.getCabeza();
+
+        while (actual != null)
+        {
+            if (actual.getDato() == vehiculo)
+            {
+                return true;
+            }
+
+            actual = actual.getSiguiente();
+        }
+
+        return false;
+    }
+
+    // COLA DE TALLER (FIFO)
 
     public void registrarVehiculoEnTaller(Vehiculo vehiculo)
             throws DatosVehiculoInvalidosException, VehiculoNoEncontradoException
@@ -98,7 +107,10 @@ public class Concesionario
             return null;
         }
 
-        return colaTaller.poll();
+        Vehiculo vehiculo = colaTaller.poll();
+        vehiculo.realizarMantenimiento();
+
+        return vehiculo;
     }
 
     public Queue<Vehiculo> getColaTaller()
@@ -106,7 +118,7 @@ public class Concesionario
         return new LinkedList<>(colaTaller);
     }
 
-    // PILA DE VENTAS
+    // PILA DE VENTAS (LIFO)
 
     public void registrarVenta(Vehiculo vehiculo) throws VehiculoNoEncontradoException
     {
@@ -114,8 +126,6 @@ public class Concesionario
         {
             throw new VehiculoNoEncontradoException("El vehiculo no esta en el inventario.");
         }
-
-        // Si el vehiculo estaba esperando taller, se retira de esa cola.
 
         colaTaller.remove(vehiculo);
         inventarioDoble.eliminar(vehiculo);
@@ -145,25 +155,6 @@ public class Concesionario
         }
 
         return copia;
-    }
-
-    // COMPROBAR SI UN VEHICULO ESTA EN EL INVENTARIO
-
-    private boolean contieneEnInventario(Vehiculo vehiculo)
-    {
-        NodoDobleVehiculo actual = inventarioDoble.getCabeza();
-
-        while (actual != null)
-        {
-            if (actual.getDato() == vehiculo)
-            {
-                return true;
-            }
-
-            actual = actual.getSiguiente();
-        }
-
-        return false;
     }
 
     // ORDENAMIENTO POR BURBUJA
@@ -212,15 +203,15 @@ public class Concesionario
         }
     }
 
-    // BUSQUEDA BINARIA POR PRECIO
+    // BUSQUEDA BINARIA: DEVUELVE TODAS LAS COINCIDENCIAS
 
-    public Vehiculo buscarVehiculoPorPrecio(double precioBuscado)
+    public ArrayList<Vehiculo> buscarVehiculoPorPrecio(double precioBuscado)
     {
-        // Primero ordenamos porque la busqueda binaria lo requiere.
+        ArrayList<Vehiculo> encontrados = new ArrayList<>();
+        ArrayList<Vehiculo> listaTemporal = new ArrayList<>();
 
         ordenarInventarioPorPrecio();
 
-        ArrayList<Vehiculo> listaTemporal = new ArrayList<>();
         NodoDobleVehiculo actual = inventarioDoble.getCabeza();
 
         while (actual != null)
@@ -231,6 +222,7 @@ public class Concesionario
 
         int inicio = 0;
         int fin = listaTemporal.size() - 1;
+        int posicion = -1;
 
         while (inicio <= fin)
         {
@@ -239,10 +231,10 @@ public class Concesionario
 
             if (vehiculoMedio.getPrecio() == precioBuscado)
             {
-                return vehiculoMedio;
+                posicion = medio;
+                break;
             }
-
-            if (vehiculoMedio.getPrecio() < precioBuscado)
+            else if (vehiculoMedio.getPrecio() < precioBuscado)
             {
                 inicio = medio + 1;
             }
@@ -252,10 +244,31 @@ public class Concesionario
             }
         }
 
-        return null;
+        if (posicion != -1)
+        {
+            int izquierda = posicion;
+            int derecha = posicion;
+
+            while (izquierda > 0 && listaTemporal.get(izquierda - 1).getPrecio() == precioBuscado)
+            {
+                izquierda--;
+            }
+
+            while (derecha < listaTemporal.size() - 1 && listaTemporal.get(derecha + 1).getPrecio() == precioBuscado)
+            {
+                derecha++;
+            }
+
+            for (int i = izquierda; i <= derecha; i++)
+            {
+                encontrados.add(listaTemporal.get(i));
+            }
+        }
+
+        return encontrados;
     }
 
-    // FILTRADO POR TIPO DE VEHICULO
+    // FILTRAR POR TIPO
 
     public ArrayList<Carro> obtenerCarros()
     {

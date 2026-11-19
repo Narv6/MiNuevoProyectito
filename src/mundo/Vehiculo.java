@@ -3,14 +3,23 @@ package mundo;
 
 import excepciones.DatosVehiculoInvalidosException;
 import excepciones.PrecioInvalidoException;
+import interfaz.Mantenible;
 
-public abstract class Vehiculo
+/**
+ * Clase padre de los vehiculos.
+ */
+public abstract class Vehiculo implements Mantenible
 {
     // ATRIBUTOS
 
     private String marca;
     private String modelo;
     private double precio;
+    private String rutaImagen;
+    private Motor motor;
+    private boolean mantenimientoRealizado;
+    private double costoManoObra;
+    private double costoRepuestos;
 
     // CONSTRUCTOR
 
@@ -20,6 +29,12 @@ public abstract class Vehiculo
         setMarca(marca);
         setModelo(modelo);
         setPrecio(precio);
+
+        this.rutaImagen = "";
+        this.motor = null;
+        this.mantenimientoRealizado = false;
+        this.costoManoObra = 0;
+        this.costoRepuestos = 0;
     }
 
     // METODO ABSTRACTO
@@ -71,6 +86,96 @@ public abstract class Vehiculo
         }
 
         this.precio = precio;
+    }
+
+    // IMAGEN DEL VEHICULO
+
+    public String getRutaImagen()
+    {
+        return rutaImagen;
+    }
+
+    public void setRutaImagen(String rutaImagen) throws DatosVehiculoInvalidosException
+    {
+        if (rutaImagen != null && rutaImagen.contains(";"))
+        {
+            throw new DatosVehiculoInvalidosException("La ruta no puede contener punto y coma.");
+        }
+
+        if (rutaImagen == null)
+        {
+            this.rutaImagen = "";
+        }
+        else
+        {
+            this.rutaImagen = rutaImagen;
+        }
+    }
+
+    // MOTOR DEL VEHICULO
+
+    public Motor getMotor()
+    {
+        return motor;
+    }
+
+    public void setMotor(Motor motor)
+    {
+        this.motor = motor;
+    }
+
+    // MANTENIMIENTO
+
+    @Override
+    public void realizarMantenimiento()
+    {
+        mantenimientoRealizado = true;
+    }
+
+    @Override
+    public double calcularCostoMantenimiento()
+    {
+        return costoManoObra + costoRepuestos;
+    }
+
+    public boolean isMantenimientoRealizado()
+    {
+        return mantenimientoRealizado;
+    }
+
+    public void setMantenimientoRealizado(boolean mantenimientoRealizado)
+    {
+        this.mantenimientoRealizado = mantenimientoRealizado;
+    }
+
+    public double getCostoManoObra()
+    {
+        return costoManoObra;
+    }
+
+    public void setCostoManoObra(double costoManoObra) throws DatosVehiculoInvalidosException
+    {
+        if (costoManoObra < 0)
+        {
+            throw new DatosVehiculoInvalidosException("El costo de mano de obra no puede ser negativo.");
+        }
+
+        this.costoManoObra = costoManoObra;
+    }
+
+    public double getCostoRepuestos()
+    {
+        return costoRepuestos;
+    }
+
+    public void setCostoRepuestos(double costoRepuestos) throws DatosVehiculoInvalidosException
+    {
+        if (costoRepuestos < 0)
+        {
+            throw new DatosVehiculoInvalidosException("El costo de repuestos no puede ser negativo.");
+        }
+
+        this.costoRepuestos = costoRepuestos;
     }
 
     // METODO TO STRING

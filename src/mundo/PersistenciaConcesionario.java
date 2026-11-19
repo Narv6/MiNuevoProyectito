@@ -16,8 +16,7 @@ import excepciones.PrecioInvalidoException;
 import excepciones.VehiculoNoEncontradoException;
 
 /**
- * Guarda y lee el inventario, la cola del taller y la pila de ventas.
- * El archivo se crea en la carpeta desde donde se ejecuta el programa.
+ * Guarda y recupera los datos del concesionario en un archivo de texto.
  */
 public class PersistenciaConcesionario
 {
@@ -32,7 +31,7 @@ public class PersistenciaConcesionario
         return archivo.exists();
     }
 
-    // GUARDAR LOS DATOS CON BUFFEREDWRITER
+    // GUARDAR LOS DATOS
 
     public static void guardar(Concesionario concesionario) throws IOException
     {
@@ -40,7 +39,7 @@ public class PersistenciaConcesionario
 
         try
         {
-            // GUARDAR INVENTARIO
+            // INVENTARIO
 
             NodoDobleVehiculo actual = concesionario.getInventarioDoble().getCabeza();
 
@@ -48,11 +47,10 @@ public class PersistenciaConcesionario
             {
                 escritor.write("I;" + convertirVehiculoATexto(actual.getDato()));
                 escritor.newLine();
-
                 actual = actual.getSiguiente();
             }
 
-            // GUARDAR COLA DE TALLER
+            // TALLER
 
             Queue<Vehiculo> taller = concesionario.getColaTaller();
 
@@ -67,7 +65,7 @@ public class PersistenciaConcesionario
                 }
             }
 
-            // GUARDAR PILA DE VENTAS
+            // VENTAS
 
             Stack<Vehiculo> ventas = concesionario.getPilaVentas();
 
@@ -83,14 +81,13 @@ public class PersistenciaConcesionario
         }
     }
 
-    // LEER LOS DATOS CON BUFFEREDREADER
+    // CARGAR LOS DATOS
 
     public static Concesionario cargar()
             throws IOException, DatosVehiculoInvalidosException, PrecioInvalidoException,
                    CapacidadCargaInvalidaException, VehiculoNoEncontradoException
     {
         Concesionario concesionario = new Concesionario();
-
         BufferedReader lector = new BufferedReader(new FileReader(ARCHIVO));
 
         try
@@ -104,29 +101,23 @@ public class PersistenciaConcesionario
                 if (partes[0].equals("I"))
                 {
                     Vehiculo vehiculo = convertirTextoAVehiculo(partes);
-
                     concesionario.agregarVehiculoInventario(vehiculo);
                 }
                 else if (partes[0].equals("T"))
                 {
                     int posicion = Integer.parseInt(partes[1]);
-
                     Vehiculo vehiculo = concesionario.obtenerVehiculoPorPosicion(posicion);
-
                     concesionario.registrarVehiculoEnTaller(vehiculo);
                 }
                 else if (partes[0].equals("V"))
                 {
                     Vehiculo vehiculo = convertirTextoAVehiculo(partes);
-
-                    // Agregar temporalmente para reconstruir la venta.
-
                     concesionario.agregarVehiculoInventario(vehiculo);
                     concesionario.registrarVenta(vehiculo);
                 }
                 else
                 {
-                    throw new IOException("Tipo de registro desconocido en el archivo.");
+                    throw new IOException("Tipo de registro desconocido.");
                 }
 
                 linea = lector.readLine();
@@ -134,11 +125,11 @@ public class PersistenciaConcesionario
         }
         catch (NumberFormatException e)
         {
-            throw new IOException("Hay un numero incorrecto en el archivo de datos.", e);
+            throw new IOException("Hay un numero incorrecto en el archivo.", e);
         }
         catch (ArrayIndexOutOfBoundsException e)
         {
-            throw new IOException("Hay una linea incompleta en el archivo de datos.", e);
+            throw new IOException("Hay una linea incompleta en el archivo.", e);
         }
         finally
         {
@@ -148,12 +139,11 @@ public class PersistenciaConcesionario
         return concesionario;
     }
 
-    // BUSCAR POSICION DE UN VEHICULO EN EL INVENTARIO
+    // POSICION DEL VEHICULO EN EL INVENTARIO
 
     private static int buscarPosicion(Concesionario concesionario, Vehiculo vehiculo)
     {
         NodoDobleVehiculo actual = concesionario.getInventarioDoble().getCabeza();
-
         int posicion = 1;
 
         while (actual != null)
@@ -170,42 +160,74 @@ public class PersistenciaConcesionario
         return -1;
     }
 
-    // CONVERTIR UN VEHICULO A TEXTO
+    // CONVERTIR OBJETO A TEXTO
 
     private static String convertirVehiculoATexto(Vehiculo vehiculo)
     {
-        String texto = vehiculo.obtenerTipoDeVehiculo() + ";" + vehiculo.getMarca() + ";"
-                + vehiculo.getModelo() + ";" + vehiculo.getPrecio();
+        String texto = vehiculo.obtenerTipoDeVehiculo() + ";"
+                + vehiculo.getMarca() + ";"
+                + vehiculo.getModelo() + ";"
+                + vehiculo.getPrecio();
 
         if (vehiculo instanceof Carro)
         {
             Carro carro = (Carro) vehiculo;
-
             texto = texto + ";" + carro.getNumeroPuertas();
         }
         else if (vehiculo instanceof Moto)
         {
             Moto moto = (Moto) vehiculo;
-
             texto = texto + ";" + moto.getCilindraje() + ";" + moto.getTipoDeUso();
         }
         else if (vehiculo instanceof Camion)
         {
             Camion camion = (Camion) vehiculo;
-
             texto = texto + ";" + camion.getCapacidadCarga() + ";" + camion.getNumeroEjes();
         }
         else if (vehiculo instanceof Bicicleta)
         {
             Bicicleta bicicleta = (Bicicleta) vehiculo;
-
             texto = texto + ";" + bicicleta.getNumeroCambios();
         }
+
+        // DATOS DEL MOTOR
+
+        String tipoMotor = "Ninguno";
+        int potencia = 0;
+        double capacidad = 0;
+        double consumo = 0;
+
+        if (vehiculo.getMotor() instanceof MotorElectrico)
+        {
+            MotorElectrico motor = (MotorElectrico) vehiculo.getMotor();
+            tipoMotor = "Electrico";
+            potencia = motor.getPotencia();
+            capacidad = motor.getCapacidadBateria();
+            consumo = motor.getConsumoCada100Km();
+        }
+        else if (vehiculo.getMotor() instanceof MotorGasolina)
+        {
+            MotorGasolina motor = (MotorGasolina) vehiculo.getMotor();
+            tipoMotor = "Gasolina";
+            potencia = motor.getPotencia();
+            capacidad = motor.getCapacidadTanque();
+        }
+
+        // IMAGEN, MOTOR Y MANTENIMIENTO
+
+        texto = texto + ";" + vehiculo.getRutaImagen()
+                + ";" + tipoMotor
+                + ";" + potencia
+                + ";" + capacidad
+                + ";" + consumo
+                + ";" + vehiculo.isMantenimientoRealizado()
+                + ";" + vehiculo.getCostoManoObra()
+                + ";" + vehiculo.getCostoRepuestos();
 
         return texto;
     }
 
-    // CONVERTIR EL TEXTO A UN VEHICULO
+    // CONVERTIR TEXTO A OBJETO
 
     private static Vehiculo convertirTextoAVehiculo(String[] partes)
             throws DatosVehiculoInvalidosException, PrecioInvalidoException,
@@ -216,33 +238,104 @@ public class PersistenciaConcesionario
         String modelo = partes[3];
         double precio = Double.parseDouble(partes[4]);
 
+        Vehiculo vehiculo;
+        int posicionImagen;
+
         if (tipo.equals("Carro"))
         {
             int puertas = Integer.parseInt(partes[5]);
-
-            return new Carro(marca, modelo, precio, puertas);
+            vehiculo = new Carro(marca, modelo, precio, puertas);
+            posicionImagen = 6;
         }
         else if (tipo.equals("Motocicleta"))
         {
             int cilindraje = Integer.parseInt(partes[5]);
             String uso = partes[6];
-
-            return new Moto(marca, modelo, precio, cilindraje, uso);
+            vehiculo = new Moto(marca, modelo, precio, cilindraje, uso);
+            posicionImagen = 7;
         }
         else if (tipo.equals("Camion"))
         {
             double carga = Double.parseDouble(partes[5]);
             int ejes = Integer.parseInt(partes[6]);
-
-            return new Camion(marca, modelo, precio, carga, ejes);
+            vehiculo = new Camion(marca, modelo, precio, carga, ejes);
+            posicionImagen = 7;
         }
         else if (tipo.equals("Bicicleta"))
         {
             int cambios = Integer.parseInt(partes[5]);
-
-            return new Bicicleta(marca, modelo, precio, cambios);
+            vehiculo = new Bicicleta(marca, modelo, precio, cambios);
+            posicionImagen = 6;
+        }
+        else
+        {
+            throw new IOException("Tipo de vehiculo desconocido: " + tipo);
         }
 
-        throw new IOException("Tipo de vehiculo desconocido: " + tipo);
+        // LEER LA IMAGEN, TAMBIEN EN ARCHIVOS ANTIGUOS
+
+        if (partes.length > posicionImagen)
+        {
+            vehiculo.setRutaImagen(partes[posicionImagen]);
+        }
+
+        // LEER LOS DATOS DEL MOTOR, SI EXISTEN
+
+        int posicionMotor = posicionImagen + 1;
+
+        if (partes.length > posicionMotor)
+        {
+            String tipoMotor = partes[posicionMotor];
+
+            if (tipoMotor.equals("Electrico"))
+            {
+                int potencia = Integer.parseInt(partes[posicionMotor + 1]);
+                double bateria = Double.parseDouble(partes[posicionMotor + 2]);
+                double consumo = Double.parseDouble(partes[posicionMotor + 3]);
+
+                MotorElectrico motor = new MotorElectrico(potencia, bateria);
+
+                if (consumo > 0)
+                {
+                    motor.setConsumoCada100Km(consumo);
+                }
+
+                vehiculo.setMotor(motor);
+            }
+            else if (tipoMotor.equals("Gasolina"))
+            {
+                int potencia = Integer.parseInt(partes[posicionMotor + 1]);
+                double tanque = Double.parseDouble(partes[posicionMotor + 2]);
+
+                MotorGasolina motor = new MotorGasolina(potencia, tanque);
+                vehiculo.setMotor(motor);
+            }
+            else if (!tipoMotor.equals("Ninguno") && !tipoMotor.isEmpty())
+            {
+                throw new IOException("Tipo de motor desconocido: " + tipoMotor);
+            }
+
+            // LEER MANTENIMIENTO
+
+            if (partes.length > posicionMotor + 4)
+            {
+                vehiculo.setMantenimientoRealizado(
+                        Boolean.parseBoolean(partes[posicionMotor + 4]));
+            }
+
+            if (partes.length > posicionMotor + 5)
+            {
+                vehiculo.setCostoManoObra(
+                        Double.parseDouble(partes[posicionMotor + 5]));
+            }
+
+            if (partes.length > posicionMotor + 6)
+            {
+                vehiculo.setCostoRepuestos(
+                        Double.parseDouble(partes[posicionMotor + 6]));
+            }
+        }
+
+        return vehiculo;
     }
 }
